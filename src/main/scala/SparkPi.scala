@@ -18,7 +18,6 @@
 // scalastyle:off println
 
 import scala.math.random
-import com.mongodb
 
 import org.apache.spark._
 
