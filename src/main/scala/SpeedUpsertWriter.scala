@@ -7,8 +7,7 @@ class SpeedUpsertWriter(
     connectionString: String,
     databaseName: String,
     collectionName: String,
-    rate: Double,
-    factor: Double
+    halfLifeMs: Int
 ) extends ForeachWriter[Speed] {
 
     var mongoClient: MongoClient = _
@@ -22,7 +21,7 @@ class SpeedUpsertWriter(
         collection = database.getCollection(collectionName)
         updater = new MongoSpeedUpdater(
             collection,
-            new SpeedUpdateBsonFactory(rate, factor))
+            new SpeedUpdateBsonFactory(halfLifeMs))
         true
     }
 

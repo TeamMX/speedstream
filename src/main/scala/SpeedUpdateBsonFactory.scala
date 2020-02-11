@@ -4,18 +4,16 @@ import org.mongodb.scala.bson._
 
 class SpeedUpdateBsonFactory(halfLifeMs: Int) {
     def getBson(timestamp: Long, speedKph: Double): Bson = {
-        val rate = 0.5
-        val factor = 1.0 / halfLifeMs
         val bTimestamp = BsonInt64(timestamp)
         val thing = operator("$pow",
-            BsonDouble(rate),
-            operator("$multiply",
-                BsonDouble(factor),
+            BsonDouble(0.5),
+            operator("$divide",
                 operator("$subtract",
                     bTimestamp,
                     operator("$ifNull",
                         BsonString("$timestamp"),
-                        bTimestamp))))
+                        bTimestamp)),
+                BsonInt32(halfLifeMs)))
         new BsonDocument("$set", new BsonDocument()
             .append("timestamp", bTimestamp)
             .append("weight", operator("$add",

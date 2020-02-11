@@ -24,7 +24,7 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
             collection = MongoClient("mongodb://localhost:27017").getDatabase("capstonetest").getCollection("capstonetest")
             updater = new MongoSpeedUpdater(
                 collection,
-                new SpeedUpdateBsonFactory(0.5, 1.0/20000))
+                new SpeedUpdateBsonFactory(20000))
             isInit = true
         }
         // clear the collection
@@ -49,11 +49,8 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
         assertResult(unixTimestampMs, "timestamp") {
             documents(0).getLong("timestamp")
         }
-        assertResult(1.0, "weight") {
-            documents(0).getDouble("weight")
-        }
-        assertResult(100, "value") {
-            documents(0).getDouble("value")
+        assertResult(100, "speedkph") {
+            documents(0).getDouble("value") / documents(0).getDouble("weight")
         }
     }
 
@@ -69,8 +66,9 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
 
         // assert
         assertResult(1, "number of documents"){ documents.length }
-        assertResult(2.0, "weight") { documents(0).getDouble("weight") }
-        assertResult(150, "value") { documents(0).getDouble("value") }
+        assertResult(75, "speedkph") {
+            documents(0).getDouble("value") / documents(0).getDouble("weight")
+        }
     }
 
     test("MongoSpeedUpdater.accept segment of newer timestamp") {
@@ -80,14 +78,43 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
         Await.result(updater.accept(firstRecord), Duration.Inf)
 
         // act
-        Await.result(updater.accept(secondResult), Duration.Inf)
+        Await.result(updater.accept(secondRecord), Duration.Inf)
         val documents = Await.result(collection.find().toFuture, Duration.Inf).toList
 
         // assert
         assertResult(1, "number of documents") { documents.length }
+        assertResult(60, "speedkph") {
+            documents(0).getDouble("value") / documents(0).getDouble("weight")
+        }
     }
 
     test("MongoSpeedUpdater.accept segment of older timestamp") {
+        // arrange
+        val firstRecord = new Speed("123", "456", unixTimestampMs + fortySecondsMs, 50)
+        val secondRecord = new Speed("123", "456", unixTimestampMs, 100)
+        Await.result(updater.accept(firstRecord), Duration.Inf)
 
+        // act
+        Await.result(updater.accept(secondRecord), Duration.Inf)
+        val documents = Await.result(collection.find().toFuture, Duration.Inf).toList
+
+        // assert        
+        assertResult(1, "number of documents") { documents.length }
+        assertResult(60, "speedkph") {
+            documents(0).getDouble("value") / documents(0).getDouble("weight")
+        }
+    }
+
+    test("MongoSpeedUpdater.accept works with real powers") {
+        // arrange
+        val firstRecord = new Speed("123", "456", unixTimestampMs, 100)
+        val secondRecord = new Speed("123", "456", unixTimestampMs + 10000, 50)
+        Await.result(updater.accept(firstRecord), Duration.Inf)
+
+        // act
+        Await.result(updater.accept(secondRecord), Duration.Inf)
+
+        // assert
+        // it didn't crash, so we're good
     }
 }
