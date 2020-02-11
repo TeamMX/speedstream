@@ -2,9 +2,11 @@ import org.mongodb.scala.bson.conversions.Bson
 import java.util.Date
 import org.mongodb.scala.bson._
 
-class SpeedUpdateBsonFactory(rate: Double, factor: Double) {
-    def getBson(timestamp: Date, weight: Double, value: Double): Bson = {
-        val bTimestamp = new BsonTimestamp(timestamp.getTime())
+class SpeedUpdateBsonFactory(halfLifeMs: Int) {
+    def getBson(timestamp: Long, speedKph: Double): Bson = {
+        val rate = 0.5
+        val factor = 1.0 / halfLifeMs
+        val bTimestamp = BsonInt64(timestamp)
         val thing = operator("$pow",
             BsonDouble(rate),
             operator("$multiply",
@@ -17,12 +19,12 @@ class SpeedUpdateBsonFactory(rate: Double, factor: Double) {
         new BsonDocument("$set", new BsonDocument()
             .append("timestamp", bTimestamp)
             .append("weight", operator("$add",
-                BsonDouble(weight),
+                BsonInt32(1),
                 operator("$multiply",
                     operator("$ifNull", BsonString("$weight"), BsonInt32(0)),
                     thing)))
             .append("value", operator("$add",
-                BsonDouble(value),
+                BsonDouble(speedKph),
                 operator("$multiply",
                     operator("$ifNull", BsonString("$value"), BsonInt32(0)),
                     thing))))

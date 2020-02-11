@@ -3,9 +3,8 @@ import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.bson.conversions.Bson
 import java.util.Date
-import scala.concurrent.Future
 
-case class Speed(from: String, to: String, timestamp: Date, weight: Double, value: Double)
+case class Speed(from: String, to: String, timestamp: Long, speedKph: Double)
 
 class MongoSpeedUpdater(
     collection: MongoCollection[Document],
@@ -20,11 +19,11 @@ class MongoSpeedUpdater(
             .toFuture()
     }
 
-    private def getFilter(entry: Speed): Bson = {
+    private def getFilter(entry: Speed) = {
         equal("_id", s"${entry.from} ${entry.to}")
     }
 
     private def getUpdate(entry: Speed): Seq[Bson] = {
-        List(factory.getBson(entry.timestamp, entry.weight, entry.value))
+        List(factory.getBson(entry.timestamp, entry.speedKph))
     }
 }

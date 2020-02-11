@@ -19,7 +19,7 @@ class SpeedUpsertWriter(
     override def open(partitionId: Long, epochId: Long): Boolean = {
         mongoClient = MongoClient(connectionString)
         database = mongoClient.getDatabase(databaseName)
-        collection = database.getCollection[Document](collectionName)
+        collection = database.getCollection(collectionName)
         updater = new MongoSpeedUpdater(
             collection,
             new SpeedUpdateBsonFactory(rate, factor))
