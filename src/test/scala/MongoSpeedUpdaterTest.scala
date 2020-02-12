@@ -66,6 +66,7 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
 
         // assert
         assertResult(1, "number of documents"){ documents.length }
+        assertResult(unixTimestampMs, "timestamp") { documents(0).getLong("timestamp") }
         assertResult(75, "speedkph") {
             documents(0).getDouble("value") / documents(0).getDouble("weight")
         }
@@ -83,6 +84,7 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
 
         // assert
         assertResult(1, "number of documents") { documents.length }
+        assertResult(unixTimestampMs + fortySecondsMs, "timestamp") { documents(0).getLong("timestamp") }
         assertResult(60, "speedkph") {
             documents(0).getDouble("value") / documents(0).getDouble("weight")
         }
@@ -98,8 +100,9 @@ class MongoSpeedUpdaterTest extends AnyFunSuite with BeforeAndAfterEach {
         Await.result(updater.accept(secondRecord), Duration.Inf)
         val documents = Await.result(collection.find().toFuture, Duration.Inf).toList
 
-        // assert        
+        // assert
         assertResult(1, "number of documents") { documents.length }
+        assertResult(unixTimestampMs, "timestamp") { documents(0).getLong("timestamp") }
         assertResult(60, "speedkph") {
             documents(0).getDouble("value") / documents(0).getDouble("weight")
         }
