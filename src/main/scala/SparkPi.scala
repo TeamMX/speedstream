@@ -39,6 +39,7 @@ object SparkPi {
             link._2))
       })
 
+    // TODO: kafka checkpointing / offset saving
     val stream = spark
       .readStream
       .format("kafka")
@@ -73,7 +74,7 @@ object SparkPi {
         new SpeedUpsertWriter(
           mongostr,
           mongodb,
-          mongostr,
+          mongocoll,
           40000))
       .start()
 
