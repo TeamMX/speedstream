@@ -10,11 +10,12 @@ case class Telemetry(sensorId: String, timestamp: Long, speedKph: Double)
 
 object SparkPi {
   def main(args: Array[String]) {
-    if (args.length != 6) {
-      System.err.print("Usage: SparkPi <mongoconn> <mongodb> <mongocoll> <kafkaserver> <kafkatopic> <sensormap>")
+    if (args.length != 7) {
+      System.err.print("Usage: SparkPi <mongoconn> <mongodb> <mongocoll> <kafkaserver> <kafkatopic> <sensormap> <upserthalflife>")
       System.exit(1)
     }
-    val Array(mongostr, mongodb, mongocoll, kafkaserver, kafkatopic, sensormap) = args
+    val Array(mongostr, mongodb, mongocoll, kafkaserver, kafkatopic, sensormap, halflifestr) = args
+    val upserthalflife = halflifestr.toInt
 
     val spark = SparkSession
       .builder
@@ -75,7 +76,7 @@ object SparkPi {
           mongostr,
           mongodb,
           mongocoll,
-          40000))
+          upserthalflife))
       .start()
 
     query.awaitTermination()
